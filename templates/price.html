@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INR Pricing</title>
+</head>
+<body>
+    {% if inr %}
+        <h1>Price of Bitcoin in Inr is {{inr}}</h1>
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class=flashes>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+             </ul>
+        {% endif %}
+    {% endwith %}
+    <form action="{{ url_for('price') }}" method="post">
+        <label for="Cname">Crypto Name</label><br>
+        <input type="text"  name="Cname" required><br>
+        <input type="submit" value ="INR"></button>
+    </form>
+    
+</body>
+</html>

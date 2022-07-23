@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class=flashes>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+             </ul>
+        {% endif %}
+    {% endwith %}
+    <form action="{{ url_for('signup') }}" method="post">
+        <label for="fname">First name:</label><br>
+        <input type="text"  name="fname" required><br>
+        <label for="lname">Last name:</label><br>
+        <input type="text" name="lname"><br>
+        <label for="mail">Email:</label><br>
+        <input type="email" name="mail" required><br>
+        <label for="phone_no">Phone no:</label><br>
+        <input type="tel" id="phone_no" name="phone_no" placeholder="Without any code"  ><br>
+        <label for="county">Country</label><br>
+        <input type="text" name ="country"><br>
+        <label fro ="pass">Password</label><br>
+        <input type="password" name="pass" required><br>
+        <label fro ="Repass">Reenter Password</label><br>
+        <input type="password" name="Repass" required><br>
+        <input type="submit" value ="Sign Up"></button>
+    </form>
+    <a href ="{{ url_for('login') }}" title="Sign in Page">Already have account | Sign in</a>
+    
+</body>
+</html>

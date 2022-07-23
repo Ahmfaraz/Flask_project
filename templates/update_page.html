@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info</title>
+
+</head>
+<body>
+    <form action="{{ url_for('update_info') }}" method="patch">
+        <label for="Roll_no">Roll_no:</label><br>
+        <input type="number"  name="Roll_no" required><br>
+        <label for="phone_no">10 digit Phone no:</label><br>
+        <input type="tel" id="phone" name="phone_no" placeholder="Without any code" pattern="[6-9]{3}[0-9]{3}[0-9]{4}"  ><br>
+        <label for="fname">fname:</label><br>
+        <input type="text"  name="fname"><br>
+        <label for="lname">lname:</label><br>
+        <input type="text"  name="lname"><br>
+        <label for="country">country:</label><br>
+        <input type="text"  name="country"><br>
+
+        <input type="submit" value ="Sign in"></button>
+    </form>
+</body>
+</html>
