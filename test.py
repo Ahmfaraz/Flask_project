@@ -7,17 +7,61 @@ import re
 import requests
 from dbcon import getDb
 from flask_login import LoginManager,UserMixin, login_user, login_required, logout_user, current_user
+import flask_login
 
 app = Flask(__name__)
 app.secret_key = b'\x1e\xfb\x06%\xd8IN\x8c\xad@\xe6M'
 
-# login_manager = LoginManager()
-# login_manager.init_app(app)
-# login_manager.login_view = "login"
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(int(user_id))
+class User(flask_login.UserMixin):
+    email=''
+
+    def is_active(self):
+        """True, as all users are active."""
+        return True
+
+    def get_id(self):
+        """Return the email address to satisfy Flask-Login's requirements."""
+        return self.email
+
+    def is_authenticated(self):
+        """Return True if the user is authenticated."""
+        return self.authenticated
+
+    def is_anonymous(self):
+        """False, as anonymous users aren't supported."""
+        return False
+    
+
+@login_manager.user_loader
+def user_loader(email):
+
+    if email =='':
+        return
+    print('user_loader',email)
+
+    user = User()
+    user.id = email
+    return user
+
+# @login_manager.request_loader
+# def request_loader(request):
+#     email = 
+#     if email =='':
+#         return
+#     print('request',email)
+
+#     user = User()
+#     user.id = email
+#     return user
+
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return 'Unauthorized', 401
 
 
 
@@ -50,6 +94,9 @@ def login():
             flash('User not found please create account','error')
             return render_template('index.html')
         else:
+            user = User()
+            user.email = full_mail[0]
+            flask_login.login_user(user)
             return render_template('home.html',user=ans)
     else:
         return render_template('index.html')
@@ -104,6 +151,7 @@ def signup():
 
 
 @app.route('/change',methods=['GET','POST'])
+@login_required
 def change():
     if request.method=='POST':
         f=request.form
@@ -139,7 +187,16 @@ def change():
     return render_template('/change.html')
 
 
+@app.route('/logout')
+@login_required
+def logout():
+    flask_login.logout_user()
+    flash('Logout Successfully')
+    return  render_template('/index.html')
+
+
 @app.route('/deactivate',methods=['GET','POST'])
+@flask_login.login_required
 def deactivate():
     if request.method=='POST':
         f=request.form

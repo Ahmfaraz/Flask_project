@@ -1,7 +1,7 @@
 import sqlite3
 conn = sqlite3.connect('prod.db')
 c=conn.cursor()
-c.execute("""Alter table emp1 add column user_id integer unique AUTOINCREMENT""")
+# c.execute("""Alter table emp1 add column user_id integer unique AUTOINCREMENT""")
 # c.execute("Insert into info2 values(25, 9889595800, 'faraz', 'uddin', 'ahmadfaraz', 'gmail','')")
 # c.execute("Insert into info2 values(2, 9889595032, 'faraz', 'uddin', 'ahmadfarazuddin01', 'gmail','')")
 # c.execute("Insert into info2 values(3, 9889595033, 'faraz', 'siddiqui', 'ahmadfaraz01', 'gmail','')")
@@ -12,21 +12,21 @@ c.execute("""Alter table emp1 add column user_id integer unique AUTOINCREMENT"""
 
 
 conn.commit()
-# c.execute("""Create table api_tab (Roll_no integer primary key AUTOINCREMENT,
-#     phone_no text  not null unique,
-#     fname text not null,
-#     lname text,
-#     address text not null,
-#     b_group text,
-#     country text default 'India'
-# )""")
-# print('table created')
-# conn.commit()
+c.execute("""Create table emp_1 (user_id integer primary key AUTOINCREMENT,
+    phone_no text  not null unique,
+    fname text not null,
+    lname text,
+    address text not null,
+    b_group text,
+    country text default 'India'
+)""")
+print('table created')
+conn.commit()
 
 # c.execute("Insert into emp values('Faraz','uddin',15000)")
 # c.execute("Alter table emp add mail_1 text")
 # c.execute('drop table emp')
-c.execute("""select * from emp1""")
+c.execute("""select * from emp_1""")
 
 ans = c.fetchall()
 

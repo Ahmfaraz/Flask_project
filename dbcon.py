@@ -20,7 +20,7 @@ class getDb:
         encrpt=self.by.generate_password_hash(data['pass'])
         data['pass']=encrpt
         try:
-            self.c.execute(sql,(data['phone'],data['fname'],data['lname'],data['mail'],data['pass'],data['salut'],data['country']))
+            self.c.execute(sql,(data['phone_no'],data['fname'],data['lname'],data['mail'],data['pass'],data['salut'],data['country']))
             self.conn.commit()
             self.conn.close()
         except :
@@ -363,6 +363,17 @@ class getDb:
             print(qry)
             # except:
             return 'Value Updated'
+
+    def user_id(self,user_id):
+        sql=f"select phone_no from where email={user_id}"
+        print(sql)
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        self.c.execute(sql)
+
+        ans1 =self.c.fetchall()
+        print(ans1)
+        return ans1
         
         
 
