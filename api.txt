@@ -1,0 +1,35 @@
+@app.route('/post_api' ,methods=['POST'])
+def post_api():
+    f= request.args
+    f=json.dumps(f)
+    f=json.loads(f)
+    obj = getDb('emp1')
+    obj=obj.api_post(f)
+    return str(obj)
+
+@app.route('/dlt_api/<int:Roll_no>' ,methods=['DELETE'])
+def dlt_api(Roll_no):
+    # f= request.args
+    # f=json.dumps(f)
+    # f=json.loads(f)
+    obj = getDb('emp1')
+    obj=obj.dlt_api(Roll_no)
+    return str(obj)
+
+@app.route('/update_api' ,methods=['PATCH'])
+def update_api():
+    f= request.args
+    f=json.dumps(f)
+    f=json.loads(f)
+    obj = getDb('emp1')
+    obj=obj.update_api(f)
+    return str(obj)
+
+@app.route('/get_api' ,methods=['GET'])
+def get_api():
+    f= request.args
+    f=json.dumps(f)
+    f=json.loads(f)
+    obj = getDb('emp1')
+    obj=obj.get_api(f)
+    return str(obj)

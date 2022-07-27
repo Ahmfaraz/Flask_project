@@ -278,14 +278,14 @@ class getDb:
         
         # return 'Updated '
     def api_post(self,data):
-        set=('Roll_no' ,
+        set=(
         'phone_no',
         'fname' ,
         'lname' ,
         'address' ,
         'b_group' ,
         'country' )
-        qry = """Insert into api_tab values("""
+        qry = """Insert into api_tab('phone_no','fname','lname','address','b_group','country') values("""
         for i in set:
             if i in data:
                 qry=qry+ "'" +data[i]+"'" +" ,"
@@ -299,6 +299,7 @@ class getDb:
         #     else:
         #         qry=qry+ "'" +values+"'" +" ,"
         qry=qry[:-1] +")"
+        print(qry)
         try:
         # print(qry)
             self.c.execute(qry)
@@ -373,7 +374,40 @@ class getDb:
 
         ans1 =self.c.fetchall()
         print(ans1)
+        return 
+        
+
+    def buyCoin(self,user_id,data):
+        coin_fract=self.coinCal(data)
+        qry="""Insert into buy values(?,?,?,?)"""
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        self.c.execute(qry,(user_id,data['name'],data['buy'],coin_fract,))
+        ans1 =self.c.fetchall()
+        self.conn.commit()
         return ans1
+
+    def buyDetails(self,user):
+        qry="SELECT coin_name , sum(quantity) ,sum(amount) FROM buy where user_id = ? GROUP BY coin_name "
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        self.c.execute(qry,(user,))
+        ans1 =self.c.fetchall()
+        return ans1
+
+
+
+
+    
+
+
+    def coinCal(self,data):
+        coin_fract=round((float(data['result'])/float(data['buy'])),2)
+        coin_fract=round((1/coin_fract),3)
+        return coin_fract
+        
+
+
         
         
 

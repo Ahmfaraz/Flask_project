@@ -1,6 +1,6 @@
 
 from operator import methodcaller
-from flask import Flask, redirect,render_template,request,url_for,jsonify,flash
+from flask import Flask, redirect,render_template,request,url_for,jsonify,flash,session
 import json
 import sqlite3
 import re
@@ -47,23 +47,22 @@ def user_loader(email):
     user.id = email
     return user
 
-# @login_manager.request_loader
-# def request_loader(request):
-#     email = 
-#     if email =='':
-#         return
-#     print('request',email)
-
-#     user = User()
-#     user.id = email
-#     return user
-
-
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return 'Unauthorized', 401
+    flash('Please Login First')
+    return redirect('/')
 
 
+def dcSolv(dc,ans):
+
+
+    for key,value in dc.items():
+        if isinstance(value,dict):
+            
+             dcSolv(value,ans)
+        else:
+            ans[key]=value
+    return ans
 
 
 
@@ -71,7 +70,10 @@ def unauthorized_handler():
 def index():
     return render_template('index.html')
 
+
+
 @app.route('/login',methods=['GET','POST'])
+# @app.route('/')
 def login():
     if request.method=='POST':
         f = request.form
@@ -90,15 +92,20 @@ def login():
         lst.append(data1['pass'])
         ans =obj.verify(lst)
         print(ans)
+        
         if ans ==-1 or ans is None:
             flash('User not found please create account','error')
             return render_template('index.html')
         else:
             user = User()
             user.email = full_mail[0]
+            session['user']=full_mail[0]
+            print(session['user'],"In")
             flask_login.login_user(user)
             return render_template('home.html',user=ans)
     else:
+        if 'user' in session:
+            return  render_template('home.html',user=session['user'])
         return render_template('index.html')
 
 
@@ -190,9 +197,21 @@ def change():
 @app.route('/logout')
 @login_required
 def logout():
-    flask_login.logout_user()
-    flash('Logout Successfully')
-    return  render_template('/index.html')
+    if 'user' in session:
+        session.pop('user',None)
+        flask_login.logout_user()
+        # print(session['user'],"session")
+        
+        flash('Logout Successfully')
+        return  render_template('/home.html')
+    else:
+        flash(' Please Login First')
+        return  render_template('/index.html')
+
+
+    
+    
+    
 
 
 @app.route('/deactivate',methods=['GET','POST'])
@@ -230,25 +249,23 @@ def price():
         f=request.form
         f=json.dumps(f)
         f=json.loads(f)
-        print(f)
         
         coin=f['Cname']
-        # api=
         api= "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?symbol={0}&amount=1".format(coin)
-        # api="https://api.coingecko.com/api/v3/simple/price?ids={0}&vs_currencies=usd".format(coin)
-        print(api)
+       
         payload = {}
         headers= {
             "X-CMC_PRO_API_KEY": "2715b13c-4f46-4f41-ba19-9e78817a51f6"
         }
-        # x= requests.get(api,headers={"accept": "application/json"})
+        
         x = requests.request("GET", api, headers=headers, data = payload)
         status_code = x.status_code
         result = x.json()
         print(result)
-        print(type(result))
-
-        amount=float(result['data']['quote']['USD']['price'])
+        ansdict={}
+        ansdict=dcSolv(result,ansdict)
+        # print(type(result))
+        amount=float(ansdict['price'])
         # amount=int(amount['usd'])
         print(amount)
         url = "https://api.apilayer.com/exchangerates_data/convert?to=inr&from=usd&amount={0}".format(amount)
@@ -256,20 +273,65 @@ def price():
         headers1= {
             "apikey": "M5OFl9Hqr31T5mqZusfJb72doOixRuXG"
         }
+        
+        
         x1 = requests.request("GET", url, headers=headers1, data = payload1)
         status_code = x1.status_code
         result1 = x1.json()
+
         print(type(result1))
+        result1=dcSolv(result1,{})
         # result1=float(result1)
-
-
-        
         # x1= requests.get(api,headers={"accept": "application/json"})
-        print()
+        
 
-        return render_template('/price.html',inr=result1)
+        return render_template('/price.html',inr=result1['result'])
     else:
         return render_template('/price.html')
+
+def getPrice(data):
+        
+        coin=data
+        api= "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?symbol={0}&amount=1".format(coin)
+       
+        payload = {}
+        headers= {
+            "X-CMC_PRO_API_KEY": "2715b13c-4f46-4f41-ba19-9e78817a51f6"
+        }
+        
+        x = requests.request("GET", api, headers=headers, data = payload)
+        status_code = x.status_code
+        result = x.json()
+        # print(result)
+        ansdict={}
+        ansdict=dcSolv(result,ansdict)
+        if ansdict['error_code'] =='400':
+            return -1
+        print((ansdict))
+        amount=float(ansdict['price'])
+        # amount=int(amount['usd'])
+        # print(amount)
+        url = "https://api.apilayer.com/exchangerates_data/convert?to=inr&from=usd&amount={0}".format(amount)
+        payload1 = {}
+        headers1= {
+            "apikey": "M5OFl9Hqr31T5mqZusfJb72doOixRuXG"
+        }
+        
+        
+        x1 = requests.request("GET", url, headers=headers1, data = payload1)
+        status_code = x1.status_code
+        result1 = x1.json()
+
+        # print(type(result1))
+        result1=dcSolv(result1,{})
+        # result1=float(result1)
+        # x1= requests.get(api,headers={"accept": "application/json"})
+        ansdict['result']=result1['result']
+        print(ansdict)
+        
+        
+
+        return ansdict
 
 # @app.route('//user_info/<int:Roll_no>/',methods=['GET'])
 @app.route('/user_info',methods=['GET'])
@@ -317,6 +379,36 @@ def update_info():
        
     # return render_template('/update_page.html')
 
+@app.route('/dashboard',methods=['GET','POST'])
+@login_required
+def dashboard():
+    if request.method=='POST':
+        f=request.form
+        print(f,'=========')
+        f=json.dumps(f)
+        f=json.loads(f)
+        print(f,'--------------')
+        coin_data=getPrice(f['coin_name'])
+        if coin_data==-1:
+            return 'Checked coin name'
+        else:
+            coin_data['buy']=f['amount']
+            Obj = getDb('emp1')
+            print(session['user'])
+            obj = Obj.buyCoin(session['user'],coin_data)
+            return 'BUY DONE'
+    else:
+        return render_template('/dashboard.html')
+
+
+@app.route('/my_buying',methods=['GET','POST'])
+@login_required
+def my_buying():
+    Obj = getDb('emp1')
+    obj=Obj.buyDetails(session['user'])
+    str1="Coin Name  Quantity  Amount \n "
+    return str1+str(obj)
+
 
 
 
@@ -328,35 +420,6 @@ def post_api():
     obj = getDb('emp1')
     obj=obj.api_post(f)
     return str(obj)
-
-@app.route('/dlt_api/<int:Roll_no>' ,methods=['DELETE'])
-def dlt_api(Roll_no):
-    # f= request.args
-    # f=json.dumps(f)
-    # f=json.loads(f)
-    obj = getDb('emp1')
-    obj=obj.dlt_api(Roll_no)
-    return str(obj)
-
-@app.route('/update_api' ,methods=['PATCH'])
-def update_api():
-    f= request.args
-    f=json.dumps(f)
-    f=json.loads(f)
-    obj = getDb('emp1')
-    obj=obj.update_api(f)
-    return str(obj)
-
-@app.route('/get_api' ,methods=['GET'])
-def get_api():
-    f= request.args
-    f=json.dumps(f)
-    f=json.loads(f)
-    obj = getDb('emp1')
-    obj=obj.get_api(f)
-    return str(obj)
-
-
 
 
 def pass_check(pass_w):
@@ -386,6 +449,8 @@ def pass_check(pass_w):
             return 1
     return -2
 
+
+   
 
 
 

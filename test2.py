@@ -6,27 +6,33 @@ c=conn.cursor()
 # c.execute("Insert into info2 values(2, 9889595032, 'faraz', 'uddin', 'ahmadfarazuddin01', 'gmail','')")
 # c.execute("Insert into info2 values(3, 9889595033, 'faraz', 'siddiqui', 'ahmadfaraz01', 'gmail','')")
 # c.execute("delete from api_tab where Roll_no=2")
-# c.execute("Insert into api_tab(phone_no,fname,lname,address,b_group,country) values('998959393','aku78','','azadnagar1','','India') ")
-# c.execute("""drop table api_tab""")
+c.execute("SELECT coin_name, sum(quantity),sum(amount) FROM buy where  user_id ='azan12' GROUP BY coin_name ")
+# c.execute("""drop table account""")
 
 
+# CREATE TABLE account (
+#     user_id   text not null ,
+#     amount integer default 0,
+#     FOREIGN KEY (amount)
+#        REFERENCES emp1 (email) 
+# );
 
-conn.commit()
-c.execute("""Create table emp_1 (user_id integer primary key AUTOINCREMENT,
-    phone_no text  not null unique,
-    fname text not null,
-    lname text,
-    address text not null,
-    b_group text,
-    country text default 'India'
-)""")
-print('table created')
-conn.commit()
+# conn.commit()
+# c.execute("""CREATE TABLE buy (
+#     user_id   text not null ,
+#     coin_name text not null,
+#     amount integer default 0,
+#     quantity integer default 0.0,
+#     FOREIGN KEY (user_id)
+#        REFERENCES emp1(email) 
+# )""")
+# print('table created')
+# conn.commit()
 
 # c.execute("Insert into emp values('Faraz','uddin',15000)")
 # c.execute("Alter table emp add mail_1 text")
 # c.execute('drop table emp')
-c.execute("""select * from emp_1""")
+# c.execute("""select * from api_tab""")
 
 ans = c.fetchall()
 
