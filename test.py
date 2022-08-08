@@ -1,13 +1,14 @@
-
 from operator import methodcaller
 from flask import Flask, redirect,render_template,request,url_for,jsonify,flash,session
 import json
 import sqlite3
 import re
+from numpy import full
 import requests
 from dbcon import getDb
 from flask_login import LoginManager,UserMixin, login_user, login_required, logout_user, current_user
 import flask_login
+import logging
 
 app = Flask(__name__)
 app.secret_key = b'\x1e\xfb\x06%\xd8IN\x8c\xad@\xe6M'
@@ -100,7 +101,7 @@ def login():
             user = User()
             user.email = full_mail[0]
             session['user']=full_mail[0]
-            print(session['user'],"In")
+            # print(session['user'][0],"In")
             flask_login.login_user(user)
             return render_template('home.html',user=ans)
     else:
@@ -200,10 +201,8 @@ def logout():
     if 'user' in session:
         session.pop('user',None)
         flask_login.logout_user()
-        # print(session['user'],"session")
-        
         flash('Logout Successfully')
-        return  render_template('/home.html')
+        return  render_template('/index.html')
     else:
         flash(' Please Login First')
         return  render_template('/index.html')
@@ -243,51 +242,51 @@ def deactivate():
     # f =request.form
     # data= json.dumps(f)
     # data1=json.loads(data)
-@app.route('/price',methods=['GET','POST'])
-def price():
-    if request.method=='POST':
-        f=request.form
-        f=json.dumps(f)
-        f=json.loads(f)
+# @app.route('/price',methods=['GET','POST'])
+# def price():
+#     if request.method=='POST':
+#         f=request.form
+#         f=json.dumps(f)
+#         f=json.loads(f)
         
-        coin=f['Cname']
-        api= "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?symbol={0}&amount=1".format(coin)
+#         coin=f['Cname']
+#         api= "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?symbol={0}&amount=1".format(coin)
        
-        payload = {}
-        headers= {
-            "X-CMC_PRO_API_KEY": "2715b13c-4f46-4f41-ba19-9e78817a51f6"
-        }
+#         payload = {}
+#         headers= {
+#             "X-CMC_PRO_API_KEY": "2715b13c-4f46-4f41-ba19-9e78817a51f6"
+#         }
         
-        x = requests.request("GET", api, headers=headers, data = payload)
-        status_code = x.status_code
-        result = x.json()
-        print(result)
-        ansdict={}
-        ansdict=dcSolv(result,ansdict)
-        # print(type(result))
-        amount=float(ansdict['price'])
-        # amount=int(amount['usd'])
-        print(amount)
-        url = "https://api.apilayer.com/exchangerates_data/convert?to=inr&from=usd&amount={0}".format(amount)
-        payload1 = {}
-        headers1= {
-            "apikey": "M5OFl9Hqr31T5mqZusfJb72doOixRuXG"
-        }
+#         x = requests.request("GET", api, headers=headers, data = payload)
+#         status_code = x.status_code
+#         result = x.json()
+#         print(result)
+#         ansdict={}
+#         ansdict=dcSolv(result,ansdict)
+#         # print(type(result))
+#         amount=float(ansdict['price'])
+#         # amount=int(amount['usd'])
+#         print(amount)
+#         url = "https://api.apilayer.com/exchangerates_data/convert?to=inr&from=usd&amount={0}".format(amount)
+#         payload1 = {}
+#         headers1= {
+#             "apikey": "M5OFl9Hqr31T5mqZusfJb72doOixRuXG"
+#         }
         
         
-        x1 = requests.request("GET", url, headers=headers1, data = payload1)
-        status_code = x1.status_code
-        result1 = x1.json()
+#         x1 = requests.request("GET", url, headers=headers1, data = payload1)
+#         status_code = x1.status_code
+#         result1 = x1.json()
 
-        print(type(result1))
-        result1=dcSolv(result1,{})
-        # result1=float(result1)
-        # x1= requests.get(api,headers={"accept": "application/json"})
+#         print(type(result1))
+#         result1=dcSolv(result1,{})
+#         # result1=float(result1)
+#         # x1= requests.get(api,headers={"accept": "application/json"})
         
 
-        return render_template('/price.html',inr=result1['result'])
-    else:
-        return render_template('/price.html')
+#         return result1
+#     else:
+#         return render_template('/price.html')
 
 def getPrice(data):
         
@@ -307,7 +306,7 @@ def getPrice(data):
         ansdict=dcSolv(result,ansdict)
         if ansdict['error_code'] =='400':
             return -1
-        print((ansdict))
+        # print((ansdict))
         amount=float(ansdict['price'])
         # amount=int(amount['usd'])
         # print(amount)
@@ -327,7 +326,7 @@ def getPrice(data):
         # result1=float(result1)
         # x1= requests.get(api,headers={"accept": "application/json"})
         ansdict['result']=result1['result']
-        print(ansdict)
+        # print(ansdict)
         
         
 
@@ -396,9 +395,25 @@ def dashboard():
             Obj = getDb('emp1')
             print(session['user'])
             obj = Obj.buyCoin(session['user'],coin_data)
-            return 'BUY DONE'
+            return obj
     else:
         return render_template('/dashboard.html')
+
+@app.route('/deposit',methods=['GET','POST'])
+@login_required
+def deposit():
+    if request.method=='POST':
+        f=request.form
+        f=json.dumps(f)
+        f=json.loads(f)
+        print(f)
+        Obj = getDb('emp1')
+        obj=Obj.deposit(f['amount'],session['user'])
+        return obj
+    else:
+        return render_template('/deposit.html')
+
+
 
 
 @app.route('/my_buying',methods=['GET','POST'])
@@ -406,8 +421,11 @@ def dashboard():
 def my_buying():
     Obj = getDb('emp1')
     obj=Obj.buyDetails(session['user'])
-    str1="Coin Name  Quantity  Amount \n "
-    return str1+str(obj)
+    if isinstance(obj,str):
+        return obj
+    obj=obj.to_dict()
+    return render_template('/price.html',data=obj)
+
 
 
 
@@ -436,7 +454,7 @@ def pass_check(pass_w):
     else:
         pass_len=True
     for i in pass_w:
-        print(i)
+        # print(i)
         if i.isupper():
             is_uppr=True
         elif i.islower():

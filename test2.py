@@ -1,13 +1,17 @@
 import sqlite3
+import pandas as pd
 conn = sqlite3.connect('prod.db')
 c=conn.cursor()
+
+# qry =f"""select account_no as temp from account where user_id ='faraz'"""
+# print(qry)
 # c.execute("""Alter table emp1 add column user_id integer unique AUTOINCREMENT""")
 # c.execute("Insert into info2 values(25, 9889595800, 'faraz', 'uddin', 'ahmadfaraz', 'gmail','')")
 # c.execute("Insert into info2 values(2, 9889595032, 'faraz', 'uddin', 'ahmadfarazuddin01', 'gmail','')")
-# c.execute("Insert into info2 values(3, 9889595033, 'faraz', 'siddiqui', 'ahmadfaraz01', 'gmail','')")
+c.execute("drop table buy")
 # c.execute("delete from api_tab where Roll_no=2")
-c.execute("SELECT coin_name, sum(quantity),sum(amount) FROM buy where  user_id ='azan12' GROUP BY coin_name ")
-# c.execute("""drop table account""")
+# c.execute("drop table acc_deposit")
+# c.execute("""BEGIN TRANSACTION""")
 
 
 # CREATE TABLE account (
@@ -18,21 +22,28 @@ c.execute("SELECT coin_name, sum(quantity),sum(amount) FROM buy where  user_id =
 # );
 
 # conn.commit()
-# c.execute("""CREATE TABLE buy (
-#     user_id   text not null ,
-#     coin_name text not null,
-#     amount integer default 0,
-#     quantity integer default 0.0,
-#     FOREIGN KEY (user_id)
-#        REFERENCES emp1(email) 
-# )""")
+c.execute("""CREATE TABLE buy (
+   trx_id integer primary key AUTOINCREMENT,
+   user_id text not null,
+   acc_no text not null,
+   coin_name text not null,
+   amount integer not null,
+   quantity integer not null,
+   trx_time text not null,
+   FOREIGN KEY (acc_no)
+       REFERENCES account(account_no),
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email)
+
+)""")
 # print('table created')
-# conn.commit()
+conn.commit()
 
 # c.execute("Insert into emp values('Faraz','uddin',15000)")
 # c.execute("Alter table emp add mail_1 text")
 # c.execute('drop table emp')
-# c.execute("""select * from api_tab""")
+c.execute("""select * from buy""")
+# df = pd.read_sql_query(qry, conn)
 
 ans = c.fetchall()
 

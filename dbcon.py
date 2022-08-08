@@ -5,6 +5,8 @@ from flask import jsonify
 from flask_bcrypt import Bcrypt
 from numpy import math
 import re
+import pandas as pd
+from sqlite3 import Error
 
 class getDb:
     def __init__(self,data):
@@ -21,9 +23,11 @@ class getDb:
         data['pass']=encrpt
         try:
             self.c.execute(sql,(data['phone_no'],data['fname'],data['lname'],data['mail'],data['pass'],data['salut'],data['country']))
+            obj = self.account(data['mail'],self.c)
             self.conn.commit()
             self.conn.close()
-        except :
+        except sqlite3.Error as er:
+            print(er)
             
             return -1
 
@@ -36,26 +40,14 @@ class getDb:
 
         self.c.execute("Select * from emp1 where email=? and mail=?",(data[0],data[1],))
         ans =self.c.fetchone()
-        # self.conn.close()
-        
-        
-
-        # ans=dict(ans)
-        # print(ans)
-        # print(ans)
-        # print(type(ans))
-    
-    
         if ans is None:
             return None
         else:
             self.c.execute("Select pass from emp1 where email=? and mail=?",(data[0],data[1],))
             ans1 =self.c.fetchone()
-            # print("fetch one",ans1)
             ans1=ans1[0]
             self.conn.close()
             match_pass = self.by.check_password_hash(ans1, data[2])
-            # print('Password match',match_pass)
             if match_pass:
                 return ans[1]+" "+ans[2]
             else:
@@ -65,21 +57,17 @@ class getDb:
         sql ="""Update emp1 set pass= ? where email = ?"""
         self.conn=sqlite3.connect('prod.db')
         self.c=self.conn.cursor()
-        # print('data===',data)
         encrpt=self.by.generate_password_hash(data[3])
         data2=(encrpt,data[0])
         self.c.execute("""Update emp1 set pass=? where email=?""",(encrpt,data[0],))
         ans1=self.c.fetchone()
         self.conn.commit()
         self.conn.close()
-        # print(ans1)
         return 'Password updated Successfully'
 
 
     def pass_return(self,data):
         sql ="""select pass from emp1 where email=? and mail=?"""
-        # self.conn=sqlite3.connect('prod.db')
-        # self.c=self.conn.cursor()
         try:
 
             self.c.execute(sql,(data[0],data[1],))
@@ -90,17 +78,9 @@ class getDb:
             chck2=self.by.check_password_hash(ans1[0], data[3])
             print('chk',chck1)
             if chck1 and chck2:
-                # print('running')
                 objt= self.exchange(data)
-                # print('oej',objt)
                 return objt
-                # obj5=self.exchange(data)
-                # if obj5 !=-1:
-                #     return 1
-                # else:
-                #     return -1
         except :
-            # print('yes thats me')
             return -1
 
     def exchange(self,data):
@@ -134,10 +114,7 @@ class getDb:
         sql ="Select * from info where"
         data1=[]
         sql2="Select * from info where"
-        print('2',data)
-        # if data['phone'] is str:
-        #     data['phone']=int(data['phone'])
-        
+        print('2',data)    
         if col_ch==False:
             return -1
         else:
@@ -169,9 +146,6 @@ class getDb:
         return True
 
     def db_info(self,data,sql):
-        # if data['phone'] is str:
-        #     data['phone']=int(data['phone'])
-        
         try:
             self.conn=sqlite3.connect('prod.db')
             self.c=self.conn.cursor()
@@ -215,39 +189,6 @@ class getDb:
                 print('in 3')   
         except:
             print('no data found')
-
-
-# def get_info(self,data):
-#         self.conn=sqlite3.connect('prod.db')
-#         self.c=self.conn.cursor()
-#         dkeys=data.keys()
-#         col_ch=self.col_chk(data)
-#         sql ="Update info set "
-#         data1=[]
-#         # sql2="Select info set"
-#         print('2',data)
-#         # if data['phone'] is str:
-#         #     data['phone']=int(data['phone'])
-        
-#         if col_ch==False:
-#             return -1
-#         else:
-#             for i in dkeys:
-#                 if data[i] !='':
-#                     sql=sql+' {0} =?'.format(i)
-#                     # sql2=sql2+'{0}={1}'.format(i,data[i])
-#                     sql=sql+' and'
-#                     data1.append(data[i])
-#             if sql[-3:]=='and':
-#                 sql=sql[:-3]
-#             if len(data1)==0:
-#                 print('NO Entry made')
-#             else:
-
-#                 q_ans=self.db_info(data1,sql)
-            
-
-#             return 1
 
 
     def update_info(self,data):
@@ -378,33 +319,132 @@ class getDb:
         
 
     def buyCoin(self,user_id,data):
+        # print(data,'data')
         coin_fract=self.coinCal(data)
-        qry="""Insert into buy values(?,?,?,?)"""
+        # print(data,'data')
+        details = self.acc_details(user_id)
+        amount = int(details['amount'][0])
+        if amount< int(data['buy']):
+            return "Insufficient Balance"
+        amount =amount-int(data['buy'])
+        qry2=f"Update account set amount ='{amount}',acc_updated=datetime('now', 'localtime') where user_id='{user_id}'"
+        qry="""Insert into buy('user_id','acc_no','coin_name','at_price','amount','quantity','trx_time') values(?,?,?,?,?,?,datetime('now', 'localtime'))"""
         self.conn=sqlite3.connect('prod.db')
         self.c=self.conn.cursor()
-        self.c.execute(qry,(user_id,data['name'],data['buy'],coin_fract,))
-        ans1 =self.c.fetchall()
-        self.conn.commit()
-        return ans1
+        print(details)
+        act_no=details['account_no'][0]
+
+        try:
+            self.c.execute(qry,(user_id,act_no,data['symbol'],data['result'],data['buy'],coin_fract,))
+            self.c.execute(qry2)
+            # ans1 =self.c.fetchall()
+            
+            self.coin_bal(self.conn,data,user_id,act_no,coin_fract)
+            # if coin_bal_chk==-1:
+            #     self.conn.rollback()
+            self.conn.commit()
+            return 'Transaction success'
+        except sqlite3.Error as err:
+            print(err)
+            self.conn.rollback()
+            return 'Transaction failed'
+       
 
     def buyDetails(self,user):
-        qry="SELECT coin_name , sum(quantity) ,sum(amount) FROM buy where user_id = ? GROUP BY coin_name "
+        qry=f"SELECT coin_name as Coin, sum(quantity) as Quantity,sum(amount) as Amount FROM buy where user_id = '{user}' GROUP BY coin_name "
         self.conn=sqlite3.connect('prod.db')
         self.c=self.conn.cursor()
-        self.c.execute(qry,(user,))
-        ans1 =self.c.fetchall()
-        return ans1
+        try:
+            df = pd.read_sql_query(qry, self.conn)
+            if len(df.index)==0:
+                return 'No Buying made'
+            return df
+        except sqlite3.Error as err:
+            print(err,'buying err')
+            return 'No buying made'
+
+        # self.c.execute(qry,(user,))
+        # ans1 =self.c.fetchall()
+        
+
+    def coinCal(self,data):
+        coin_fract=round((float(data['result'])/float(data['buy'])),5)
+        coin_fract=round((1/coin_fract),5)
+        return coin_fract
+
+    def account(self,data,conn):
+        sql="Insert into account('user_id','acc_cr_time','acc_updated') values(?,datetime('now', 'localtime'),datetime('now', 'localtime'))"
+        # self.conn=sqlite3.connect('prod.db')
+        # self.c=self.conn.cursor()
+        try:
+            conn.execute(sql,(data,))
+            ans1 =self.c.fetchall()
+            self.conn.commit()
+        except:
+            conn.rollback()
+        return 1
+
+    def deposit(self,data,user_id):
+        usr_acc=self.acc_details(user_id)
+        print(usr_acc,'usr_acc')
+        acc_nos=usr_acc['account_no'][0]
+        usr_bal =usr_acc['amount'][0]
+        print(acc_nos,"--->",usr_bal)
+        total=int(usr_bal)+int(data)
+        print(data,'total')
+       
+        qry ="Insert into acc_deposit('acc_no','user_id','deposit','acc_updated') values(?,?,?,datetime('now', 'localtime'))"
+        qry2=f"Update account set amount ='{total}',acc_updated=datetime('now', 'localtime') where user_id='{user_id}'"
+        self.conn=sqlite3.connect('prod.db')
+        try:
+            self.conn.execute(qry,(acc_nos,user_id,data,))
+            self.conn.execute(qry2)
+            self.conn.commit()
+            self.c.close()
+            return 'success'
+        except sqlite3.Error as err:
+            print(err)
+            self.conn.rollback()
+            return str(-1)
+        return 'failed'
+            
 
 
+        
 
 
     
 
+    def acc_details(self,user_id):
+        sql =f"Select account_no,amount  from account where user_id ='{user_id}'"
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        df = pd.read_sql_query(sql, self.conn)
+        return df
 
-    def coinCal(self,data):
-        coin_fract=round((float(data['result'])/float(data['buy'])),2)
-        coin_fract=round((1/coin_fract),3)
-        return coin_fract
+
+    def coin_bal(self,connect,data,user_id,act_no,coin_fract):
+        sql=f"select * from coin_bal where user_id ='{user_id}' and coin_name='{data['symbol']}'"
+        ans=pd.read_sql_query(sql, connect)
+        if len(ans)==0:
+            qry ="Insert into coin_bal('user_id', 'acc_no', 'coin_name', 'quantity', 'trx_time') values(?,?,?,?,datetime('now', 'localtime'))"
+            try:
+                connect.execute(qry,(user_id,act_no,data['symbol'],coin_fract,))
+            except sqlite3.Error as err:
+                connect.rollback()
+        else:
+            qry=f"Update coin_bal set quantity= quantity+{coin_fract} where user_id='{user_id}' and coin_name ='{data['symbol']}'"
+            try:
+                connect.execute(qry)
+            except sqlite3.Error as err:
+                connect.rollback()
+                
+
+            
+
+        print(ans)
+
+
         
 
 

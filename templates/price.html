@@ -7,6 +7,15 @@
     <title>INR Pricing</title>
 </head>
 <body>
+    {% if data %}
+
+        {% for key, value  in data.items() %} 
+            <h1>{{key}} </h1>
+            <h1>{{value}}</h1>
+        {% endfor %}
+
+
+    {% endif %}
     {% if inr %}
         <h1>Price of Bitcoin in Inr is {{inr}}</h1>
     {% endif %}
@@ -19,11 +28,7 @@
              </ul>
         {% endif %}
     {% endwith %}
-    <form action="{{ url_for('price') }}" method="post">
-        <label for="Cname">Crypto Name</label><br>
-        <input type="text"  name="Cname" required><br>
-        <input type="submit" value ="INR"></button>
-    </form>
+    
     
 </body>
 </html>

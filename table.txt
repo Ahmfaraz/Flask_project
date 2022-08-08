@@ -1,0 +1,59 @@
+CREATE TABLE account (
+    account_no  integer primary key AUTOINCREMENT,
+    user_id TEXT  unique not null,
+    acc_cr_time TEXT NOT NULL,
+    amount integer default 1000,
+    acc_updated TEXT NOT NULL,
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email) 
+);
+
+CREATE TABLE acc_deposit (
+    trx_id  integer primary key AUTOINCREMENT,
+    acc_no text not null,
+    user_id TEXT  not null,
+    deposit integer not null,
+    acc_updated TEXT NOT NULL,
+    FOREIGN KEY (acc_no)
+       REFERENCES account(account_no),
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email)
+);
+
+CREATE TABLE acc_withdrawl (
+    trx_id  integer primary key AUTOINCREMENT,
+    acc_no integer not null,
+    user_id TEXT  unique not null,
+    withdrawl integer not null,
+    acc_updated TEXT NOT NULL,
+    FOREIGN KEY (acc_no)
+       REFERENCES account(account_no),
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email)
+);
+CREATE TABLE User (
+    Account_no  integer primary key AUTOINCREMENT,
+    user_id text not null unique,
+    fname TEXT not null,
+    lname text,
+    acc_updated TEXT NOT NULL,
+    FOREIGN KEY (acc_no)
+       REFERENCES account(account_no),
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email)
+);
+
+
+CREATE TABLE buy (
+   trx_id integer primary key AUTOINCREMENT,
+   user_id text not null,
+   acc_no text not null,
+   amount integer not null,
+   quantity integer not null,
+   trx_time text not null,
+   FOREIGN KEY (acc_no)
+       REFERENCES account(account_no),
+    FOREIGN KEY (user_id)
+       REFERENCES emp1(email)
+
+);
