@@ -8,7 +8,7 @@ c=conn.cursor()
 # c.execute("""Alter table emp1 add column user_id integer unique AUTOINCREMENT""")
 # c.execute("Insert into info2 values(25, 9889595800, 'faraz', 'uddin', 'ahmadfaraz', 'gmail','')")
 # c.execute("Insert into info2 values(2, 9889595032, 'faraz', 'uddin', 'ahmadfarazuddin01', 'gmail','')")
-c.execute("drop table buy")
+# c.execute("drop table buy")
 # c.execute("delete from api_tab where Roll_no=2")
 # c.execute("drop table acc_deposit")
 # c.execute("""BEGIN TRANSACTION""")
@@ -22,27 +22,28 @@ c.execute("drop table buy")
 # );
 
 # conn.commit()
-c.execute("""CREATE TABLE buy (
-   trx_id integer primary key AUTOINCREMENT,
-   user_id text not null,
-   acc_no text not null,
-   coin_name text not null,
-   amount integer not null,
-   quantity integer not null,
-   trx_time text not null,
-   FOREIGN KEY (acc_no)
-       REFERENCES account(account_no),
-    FOREIGN KEY (user_id)
-       REFERENCES emp1(email)
+# c.execute("""CREATE TABLE buy (
+#    trx_id integer primary key AUTOINCREMENT,
+#    user_id text not null,
+#    acc_no text not null,
+#    coin_name text not null,
+#    amount integer not null,
+#    quantity integer not null,
+#    trx_time text not null,
+#    FOREIGN KEY (acc_no)
+#        REFERENCES account(account_no),
+#     FOREIGN KEY (user_id)
+#        REFERENCES emp1(email)
 
-)""")
+# )""")
 # print('table created')
-conn.commit()
+# conn.commit()
 
 # c.execute("Insert into emp values('Faraz','uddin',15000)")
 # c.execute("Alter table emp add mail_1 text")
 # c.execute('drop table emp')
-c.execute("""select * from buy""")
+c.execute("""select * from sell""")
+conn.commit()
 # df = pd.read_sql_query(qry, conn)
 
 ans = c.fetchall()

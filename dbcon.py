@@ -7,6 +7,7 @@ from numpy import math
 import re
 import pandas as pd
 from sqlite3 import Error
+import requests
 
 class getDb:
     def __init__(self,data):
@@ -319,9 +320,7 @@ class getDb:
         
 
     def buyCoin(self,user_id,data):
-        # print(data,'data')
         coin_fract=self.coinCal(data)
-        # print(data,'data')
         details = self.acc_details(user_id)
         amount = int(details['amount'][0])
         if amount< int(data['buy']):
@@ -333,15 +332,10 @@ class getDb:
         self.c=self.conn.cursor()
         print(details)
         act_no=details['account_no'][0]
-
         try:
             self.c.execute(qry,(user_id,act_no,data['symbol'],data['result'],data['buy'],coin_fract,))
             self.c.execute(qry2)
-            # ans1 =self.c.fetchall()
-            
             self.coin_bal(self.conn,data,user_id,act_no,coin_fract)
-            # if coin_bal_chk==-1:
-            #     self.conn.rollback()
             self.conn.commit()
             return 'Transaction success'
         except sqlite3.Error as err:
@@ -437,12 +431,98 @@ class getDb:
             try:
                 connect.execute(qry)
             except sqlite3.Error as err:
-                connect.rollback()
-                
+                connect.rollback()  
+
+    def sell(self,data,user_id):
+        print(data)
+        qry = f" select * from coin_bal where user_id ='{user_id}' and coin_name='{data['symbol']}'"
+        qry1=f"delete from coin_bal where user_id ='{user_id}' and coin_name='{data['symbol']}'"
+        qry2=f"Insert into sell('acc_no', 'user_id','coin_name','at_price', 'quatity','amount', 'last_chang') values(?,?,?,?,?,?,datetime('now', 'localtime'))"
+        
+        
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        df = pd.read_sql_query(qry, self.conn)
+        if len(df)==0:
+            return -1
+        else:
+            quant =float(df['quantity'])
+            final_prce = float((data['result'])*quant)
+            print(df)
+            acc_no = str(df['acc_no'])
+            acc_no =acc_no[5]
+            try:
+                self.conn.execute(qry1)
+                self.conn.execute(qry2,(acc_no,user_id,data['symbol'],data['result'],quant,final_prce,))
+                qry4=f"Update account set amount=amount+{final_prce},acc_updated=datetime('now', 'localtime')  where user_id ='{user_id}'"
+                self.conn.execute(qry4)
+                self.conn.commit()
+                return 1
+            except sqlite3.Error as err:
+                self.conn.rollback()
+                self.conn.commit()
+
+                return -2
 
             
 
-        print(ans)
+
+        
+    def dcSolv(self,dc,ans):
+        for key,value in dc.items():
+            if isinstance(value,dict):
+                self.dcSolv(value,ans)
+            else:
+                ans[key]=value
+        return ans
+
+
+    def getPrice(self,data):
+        
+        coin=data
+        api= "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?symbol={0}&amount=1".format(coin)
+       
+        payload = {}
+        headers= {
+            "X-CMC_PRO_API_KEY": "2715b13c-4f46-4f41-ba19-9e78817a51f6"
+        }
+        
+        x = requests.request("GET", api, headers=headers, data = payload)
+        status_code = x.status_code
+        result = x.json()
+        # print(result)
+        ansdict={}
+        ansdict=dcSolv(result,ansdict)
+        if ansdict['error_code'] =='400':
+            return -1
+        # print((ansdict))
+        amount=float(ansdict['price'])
+        # amount=int(amount['usd'])
+        # print(amount)
+        url = "https://api.apilayer.com/exchangerates_data/convert?to=inr&from=usd&amount={0}".format(amount)
+        payload1 = {}
+        headers1= {
+            "apikey": "M5OFl9Hqr31T5mqZusfJb72doOixRuXG"
+        }
+        
+        
+        x1 = requests.request("GET", url, headers=headers1, data = payload1)
+        status_code = x1.status_code
+        result1 = x1.json()
+
+        # print(type(result1))
+        result1=dcSolv(result1,{})
+        # result1=float(result1)
+        # x1= requests.get(api,headers={"accept": "application/json"})
+        ansdict['result']=result1['result']
+        # print(ansdict)
+        
+        
+
+        return ansdict
+
+        
+
 
 
         

@@ -426,6 +426,30 @@ def my_buying():
     obj=obj.to_dict()
     return render_template('/price.html',data=obj)
 
+@app.route('/sell',methods=['GET','POST'])
+@login_required
+def sell():
+    if request.method=='POST':
+        f=request.form
+        f=json.dumps(f)
+        f=json.loads(f)
+        Obj = getDb('emp1')
+        exchng_data = getPrice(f['coin_name'])
+        print(exchng_data)
+        if exchng_data['error_code']!=0:
+            return 'Invlaid coin name'
+        
+        obj =Obj.sell(exchng_data,session['user'])
+        if obj==-1:
+            return "Insufficient balance or zero"
+        elif obj==-2:
+            return "Error try agian later"
+        else:
+            return 'Success' 
+    else:
+        return render_template('sell.html')
+
+
 
 
 
