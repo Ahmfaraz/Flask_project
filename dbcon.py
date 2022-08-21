@@ -3,6 +3,7 @@ import sqlite3
 from tokenize import group
 from flask import jsonify
 from flask_bcrypt import Bcrypt
+from matplotlib.style import use
 from numpy import math
 import re
 import pandas as pd
@@ -327,7 +328,7 @@ class getDb:
             return "Insufficient Balance"
         amount =amount-int(data['buy'])
         qry2=f"Update account set amount ='{amount}',acc_updated=datetime('now', 'localtime') where user_id='{user_id}'"
-        qry="""Insert into buy('user_id','acc_no','coin_name','at_price','amount','quantity','trx_time') values(?,?,?,?,?,?,datetime('now', 'localtime'))"""
+        qry="""Insert into buy('user_id','acc_no','coin_name','at_price','amount','quantity','trx_time','trx_type') values(?,?,?,?,?,?,datetime('now', 'localtime'),'buy')"""
         self.conn=sqlite3.connect('prod.db')
         self.c=self.conn.cursor()
         print(details)
@@ -345,20 +346,27 @@ class getDb:
        
 
     def buyDetails(self,user):
-        qry=f"SELECT coin_name as Coin, sum(quantity) as Quantity,sum(amount) as Amount FROM buy where user_id = '{user}' GROUP BY coin_name "
+        qry=f"SELECT * from coin_bal where user_id ='{user}' "
+        
         self.conn=sqlite3.connect('prod.db')
         self.c=self.conn.cursor()
         try:
             df = pd.read_sql_query(qry, self.conn)
-            if len(df.index)==0:
-                return 'No Buying made'
-            return df
+            df1 = self.getAcct(user,self.conn)
+            # if len(df.index)==0:
+            #     return 'No Buying made'
+            return df,df1
         except sqlite3.Error as err:
             print(err,'buying err')
             return 'No buying made'
 
         # self.c.execute(qry,(user,))
         # ans1 =self.c.fetchall()
+    
+    def getAcct(self,user,conn1):
+        qry=f"select * from account where user_id ='{user}'"
+        return pd.read_sql_query(qry,conn1)
+
         
 
     def coinCal(self,data):
@@ -434,10 +442,10 @@ class getDb:
                 connect.rollback()  
 
     def sell(self,data,user_id):
-        print(data)
+        # print(data)
         qry = f" select * from coin_bal where user_id ='{user_id}' and coin_name='{data['symbol']}'"
         qry1=f"delete from coin_bal where user_id ='{user_id}' and coin_name='{data['symbol']}'"
-        qry2=f"Insert into sell('acc_no', 'user_id','coin_name','at_price', 'quatity','amount', 'last_chang') values(?,?,?,?,?,?,datetime('now', 'localtime'))"
+        qry2=f"Insert into sell('user_id','acc_no', 'coin_name','at_price', 'amount','quantity','trx_time','trx_type') values(?,?,?,?,?,?,datetime('now', 'localtime'),'sell')"
         
         
         self.conn=sqlite3.connect('prod.db')
@@ -448,21 +456,38 @@ class getDb:
         else:
             quant =float(df['quantity'])
             final_prce = float((data['result'])*quant)
-            print(df)
+            # print(df)
             acc_no = str(df['acc_no'])
             acc_no =acc_no[5]
             try:
                 self.conn.execute(qry1)
-                self.conn.execute(qry2,(acc_no,user_id,data['symbol'],data['result'],quant,final_prce,))
+                self.conn.execute(qry2,(user_id,acc_no,data['symbol'],data['result'],final_prce,quant,))
                 qry4=f"Update account set amount=amount+{final_prce},acc_updated=datetime('now', 'localtime')  where user_id ='{user_id}'"
                 self.conn.execute(qry4)
                 self.conn.commit()
                 return 1
             except sqlite3.Error as err:
+                print(err)
                 self.conn.rollback()
                 self.conn.commit()
 
                 return -2
+    
+    def trxDetails(self,user):
+        qry=f"select * from buy where user_id ='{user}' UNION  select * from sell where user_id ='{user}' order by trx_time desc "
+        self.conn=sqlite3.connect('prod.db')
+        self.c=self.conn.cursor()
+        try:
+            df = pd.read_sql_query(qry, self.conn)
+            df1 = self.getAcct(user,self.conn)
+            # if len(df.index)==0:
+            #     return 'No Buying made'
+            return df,df1
+        except sqlite3.Error as err:
+            print(err,'buying err')
+            return 'No buying made'
+
+        
 
             
 

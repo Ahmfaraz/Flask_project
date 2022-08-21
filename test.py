@@ -69,6 +69,8 @@ def dcSolv(dc,ans):
 
 @app.route('/')
 def index():
+    if 'user' in session:
+        return  render_template('home.html',user=session['user'])
     return render_template('index.html')
 
 
@@ -94,6 +96,8 @@ def login():
         ans =obj.verify(lst)
         print(ans)
         
+
+        
         if ans ==-1 or ans is None:
             flash('User not found please create account','error')
             return render_template('index.html')
@@ -107,6 +111,7 @@ def login():
     else:
         if 'user' in session:
             return  render_template('home.html',user=session['user'])
+        print('0000000000')
         return render_template('index.html')
 
 
@@ -152,7 +157,9 @@ def signup():
                     return redirect('signup')
                 else:
                     print(data1)
-                    return render_template('home.html',user=data1['fname'])
+                    str=f"User {data1['fname']} is Created Successfully,Please Login"
+                    flash(str)
+                    return render_template('index.html')
 
     return render_template('signup.html')
 
@@ -304,7 +311,7 @@ def getPrice(data):
         # print(result)
         ansdict={}
         ansdict=dcSolv(result,ansdict)
-        if ansdict['error_code'] =='400':
+        if ansdict['error_code'] ==400:
             return -1
         # print((ansdict))
         amount=float(ansdict['price'])
@@ -389,7 +396,9 @@ def dashboard():
         print(f,'--------------')
         coin_data=getPrice(f['coin_name'])
         if coin_data==-1:
-            return 'Checked coin name'
+            str=f"No coin Exist with {f['coin_name']} ,please check it"
+            flash(str)
+            return  render_template('/dashboard.html')
         else:
             coin_data['buy']=f['amount']
             Obj = getDb('emp1')
@@ -420,11 +429,25 @@ def deposit():
 @login_required
 def my_buying():
     Obj = getDb('emp1')
-    obj=Obj.buyDetails(session['user'])
+    obj,obj2=Obj.buyDetails(session['user'])
     if isinstance(obj,str):
         return obj
     obj=obj.to_dict()
-    return render_template('/price.html',data=obj)
+    obj2=obj2.to_dict()
+
+    print(obj2)
+    return render_template('/details.html',data=obj,acct=obj2)
+
+@app.route('/trx_details',methods=['GET','POST'])
+@login_required
+def trx_details():
+    Obj = getDb('emp1')
+    obj,obj2=Obj.trxDetails(session['user'])
+    if isinstance(obj,str):
+        return obj
+    obj=obj.to_dict()
+    obj2=obj2.to_dict()
+    return render_template('/details.html',trx_data=obj,acct=obj2)
 
 @app.route('/sell',methods=['GET','POST'])
 @login_required

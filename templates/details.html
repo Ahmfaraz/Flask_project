@@ -1,0 +1,42 @@
+{% if acct %}
+    <h3> Total Cash | INR {{acct['amount'][0]|round(2) }}</h3>
+{% endif %}
+
+{% if data %}
+    <table cellspacing="0" cellpadding="8" border="1" >
+        <tr>
+            <th>Coin Name</th>
+            <th>Quantity</th>
+        </tr>
+    {% for i in range(data['coin_name']|length) %}
+        <tr>
+            <td>{{data['coin_name'][i]}}</td>
+            <td>{{data['quantity'][i]|round(5)}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% elif trx_data %}
+    <table cellspacing="0" cellpadding="8" border="1" >
+        <tr>
+            <th>Coin Name</th>
+            <th>At price</th>
+            <th>Amount</th>
+            <th>Quantity</th>
+            <th>Time</th>
+            <th>Type</th>
+        </tr>
+    {% for i in range(trx_data['coin_name']|length) %}
+        <tr>
+            <td>{{trx_data['coin_name'][i]}}</td>
+            <td>{{trx_data['at_price'][i]|round(3)}}</td>
+            <td>{{trx_data['amount'][i]|round(2)}}</td>
+            <td>{{trx_data['quantity'][i]|round(5)}}</td>
+            <td>{{trx_data['trx_time'][i]}}</td>
+            <td>{{trx_data['trx_type'][i]}}</td>
+            
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <h1>No data found</h1>
+{% endif %}
